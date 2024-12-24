@@ -528,6 +528,65 @@ function handleInput(event) {
     // Example action: Create a firework or interact with the game
     fireworks.push(new Firework(cw / 2, ch, inputX, inputY));
 }
+    let touchHoldTimeout; // Timeout to detect a long press
+const HOLD_DURATION = 500; // Duration (in ms) to detect a hold
+
+function handleInputStart(event) {
+    event.preventDefault();
+
+    // Get input coordinates
+    let inputX, inputY;
+    if (event.type === 'mousedown' || event.type === 'mousemove') {
+        inputX = event.clientX - canvas.offsetLeft;
+        inputY = event.clientY - canvas.offsetTop;
+    } else if (event.type === 'touchstart') {
+        inputX = event.touches[0].clientX - canvas.offsetLeft;
+        inputY = event.touches[0].clientY - canvas.offsetTop;
+    }
+
+    // Trigger the regular interaction (e.g., create a firework)
+    console.log(`Interaction at: (${inputX}, ${inputY})`);
+    fireworks.push(new Firework(cw / 2, ch, inputX, inputY));
+
+    // Start the hold detection timeout
+    touchHoldTimeout = setTimeout(() => {
+        handleTouchHold(inputX, inputY);
+    }, HOLD_DURATION);
+}
+
+function handleInputMove(event) {
+    // Clear the hold timeout if the user moves their finger
+    if (touchHoldTimeout) {
+        clearTimeout(touchHoldTimeout);
+    }
+}
+
+function handleInputEnd(event) {
+    event.preventDefault();
+
+    // Clear the hold timeout if the touch ends
+    if (touchHoldTimeout) {
+        clearTimeout(touchHoldTimeout);
+    }
+}
+
+function handleTouchHold(x, y) {
+    console.log(`Hold detected at: (${x}, ${y})`);
+    // Example: Trigger a special action on hold
+    fireworks.push(new Firework(cw / 2, ch, x, y));
+    // Add any additional hold-specific logic here
+}
+
+// Attach event listeners
+canvas.addEventListener('mousedown', handleInputStart);
+canvas.addEventListener('mousemove', handleInputMove);
+canvas.addEventListener('mouseup', handleInputEnd);
+
+canvas.addEventListener('touchstart', handleInputStart);
+canvas.addEventListener('touchmove', handleInputMove);
+canvas.addEventListener('touchend', handleInputEnd);
+canvas.addEventListener('touchcancel', handleInputEnd);
+
 
 // Attach event listeners for both `click` and `touchstart`
 canvas.addEventListener('click', handleInput);
