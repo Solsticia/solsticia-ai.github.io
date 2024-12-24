@@ -472,6 +472,7 @@
         document.body.appendChild(pauseLabel);
     }
 
+    
     document.getElementById('apply').addEventListener('click', () => {
         clearInterval(spawnInterval);
         const frequency = parseInt(document.getElementById('freq').value);
@@ -508,6 +509,22 @@
         e.preventDefault();
         mousedown = false;
     });
+    // Handle mouse click
+document.addEventListener('click', function(event) {
+    handleUserClick(event);
+});
+
+// Handle touch events
+document.addEventListener('touchstart', function(event) {
+    handleUserClick(event);
+});
+
+// Common function to handle the click
+function handleUserClick(event) {
+    // Your existing code to handle the click or touch action
+    console.log("Screen clicked or touched at: " + event.clientX + ", " + event.clientY);
+}
+
 </script>
 
 </html>
