@@ -1,131 +1,513 @@
+<!DOCTYPE html>
 <html>
-    <head>
-        <title>My Page!</title>
-        <style>
-            body{
-                width: auto;
-                background: hwb(60 51% 1% / 0.838);
-                color: white;
-                font-family: Arial, Helvetica, sans-serif;
-                margin: 0;
-                padding: 0;
-            }
-            header{
-                background: black;
-                padding: 20px 20px 40px 20px;
-                
-                background-image: url("111579134_p0_master1200.jpg");
-                background-size: 100%;
-                background-repeat: no-repeat;
-                width: 100%;
-                height: 50%;
-                position: relative;
-                top: -100px;
-            }
-            section{
-                background: white;
-                color: grey;
-                padding: 20px;
-                display: flex;
-                flex-direction: row;
-                width: 100%;
-            }
-            div{
-                background: burlywood;
-                margin: auto;
-                width: 100px;
-                color: black;
-                text-align: center;
-            }
-            ul{
-                margin: 0;
-                padding: 0;
-                list-style-type: none;
-            }
-            li{
-                display: inline-block;
-                margin-right: 20px;
-            }
-            footer{
-                background: rgba(99, 30, 30, 0.596);
-                padding: 10px 20px;
-                
-            }
-            header .logo a{
-                margin: 5px 5px 5px 5px;
-                background-color: beige;
-                display: inline-block;
-                width: 120px;
-                text-align: center;
-            }
-            .features{
-                background-color: white;
-                color: gray;
-                padding: 20px;
-                display: flex;
-                flex-direction: row;
-            }
-            .features figure{
-                margin: auto;
-                text-align: center;
-                width: 100px;   
-                          
-            }
-            
-            .features figure img{
-                border: 1px solid white;
-                width: 250px;
-                border-radius: 30px;
-                box-shadow: gray 0px 0px 0px; 
-            }
-            footer{
-                text-align: center;
-                width: 100%;
-                width: 100%;
-            }
 
-        </style>
-    </head>
+<head>
+    <meta charset="utf-8">
+    <title>Fireworks with Monsters</title>
+</head>
+<style>
+    html,
+    body {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    #canvas {
+        height: 100%;
+        width: 100%;
+        background-color: black;
+    }
+
+    .monster {
+        position: absolute;
+        width: 50px;
+        height: 50px;
+    }
+
+    .monster-hp {
+        position: absolute;
+        bottom: 0;
+        /* Position at the bottom of the monster */
+        right: 0;
+        /* Position to the right of the monster */
+        color: white;
+        /* Set text color to white */
+        background-color: rgba(0, 0, 0, 0.5);
+        /* Optional: Background for visibility */
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+        padding: 2px;
+        /* Add some padding for readability */
+        z-index: 1;
+        /* Ensure it is on top of the monster */
+    }
 
 
-    <body>
-        <header>
-            <nav>
-                <ul>
-                    <li>Sakura Empire</li>
-                    <li>Eagle Union</li>
-                    <li>Royal Navy</li>
-                    <li>Iron Blood</li> 
-                    <li class="logo"><a href="index.html">Ming's Retail</a></li>
-                    <li>Dragon Empery</li>
-                    <li>Nothern Parliament</li>
-                    <li>Iris Libre</li>
-                    <li>Vichya Dominion</li>
-                </ul>
-            </nav>
-        </header>
-        <section>Location
-            <div>Azur</div>
-            <div>Lane</div>
-            <div>Iron Blood</div>
-        </section>
-        <section class="features">Planning
-            <figure>
-                <img src="113326466_p0_master1200.jpg" alt="Musashi Mama">
-                <figcaption>Musashi Mama</figcaption>
-            </figure>
-            <figure>
-                <img src="121646909_p0_master1200.jpg" alt="Gathering">
-                <figcaption>Musashi Mama</figcaption>
-            </figure>
-            <figure>
-                <img src="117101489_p3_master1200.jpg" alt="Eugen">
-                <figcaption>Greedy Eugen~</figcaption>
-            </figure>
 
-        </section>
-        <footer>Details
-            1128 Rheinische, Iron Blood, AZL · 0592-5280393 · op@ys4fun.com
-        </footer>
-    </body>
+    #scoreboard {
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        color: white;
+        font-family: Arial, sans-serif;
+        font-size: 18px;
+    }
+
+    #pause-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+        font-family: Arial, sans-serif;
+        font-size: 24px;
+        text-align: center;
+        line-height: 100vh;
+        z-index: 1000;
+    }
+</style>
+
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="scoreboard">Score: 0</div>
+    <div id="console">
+        <label>Frequency (ms): <input id="freq" type="number" value="2000"></label><br>
+        <label>Monster Size: <input id="size" type="number" value="50"></label><br>
+        <button id="apply">Apply</button>
+    </div>
+    <div id="pause-overlay">Click [Space] to Resume</div>
+</body>
+<script>
+    // Fireworks Code
+    window.requestAnimFrame = (function () {
+        return window.requestAnimationFrame ||
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame ||
+            function (callback) {
+                window.setTimeout(callback, 1000 / 60);
+            };
+    })();
+
+    var canvas = document.getElementById('canvas'),
+        ctx = canvas.getContext('2d'),
+        cw = window.innerWidth,
+        ch = window.innerHeight,
+        fireworks = [],
+        particles = [],
+        hue = 120,
+        limiterTotal = 5,
+        limiterTick = 0,
+        timerTotal = 10,
+        timerTick = 0,
+        mousedown = false,
+        mx,
+        my;
+
+    canvas.width = cw;
+    canvas.height = ch;
+
+    function random(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+
+    function calculateDistance(p1x, p1y, p2x, p2y) {
+        var xDistance = p1x - p2x,
+            yDistance = p1y - p2y;
+        return Math.sqrt(Math.pow(xDistance, 2) + Math.pow(yDistance, 2));
+    }
+
+    class Firework {
+        constructor(sx, sy, tx, ty) {
+            this.x = sx;
+            this.y = sy;
+            this.sx = sx;
+            this.sy = sy;
+            this.tx = tx;
+            this.ty = ty;
+            this.distanceToTarget = calculateDistance(sx, sy, tx, ty);
+            this.distanceTraveled = 0;
+            this.coordinates = [];
+            this.coordinateCount = 3;
+            while (this.coordinateCount--) {
+                this.coordinates.push([this.x, this.y]);
+            }
+            this.angle = Math.atan2(ty - sy, tx - sx);
+            this.speed = 10;
+            this.acceleration = 1.05;
+            this.brightness = random(50, 70);
+            this.targetRadius = 10;
+        }
+
+        update(index) {
+            this.coordinates.pop();
+            this.coordinates.unshift([this.x, this.y]);
+
+            if (this.targetRadius < 8) {
+                this.targetRadius += 0.3;
+            } else {
+                this.targetRadius = 1;
+            }
+
+            this.speed *= this.acceleration;
+
+            var vx = Math.cos(this.angle) * this.speed,
+                vy = Math.sin(this.angle) * this.speed;
+            this.distanceTraveled = calculateDistance(this.sx, this.sy, this.x + vx, this.y + vy);
+
+            if (this.distanceTraveled >= this.distanceToTarget) {
+                createParticles(this.tx, this.ty);
+                checkCollision(this.tx, this.ty, true);
+                fireworks.splice(index, 1);
+            } else {
+                this.x += vx;
+                this.y += vy;
+                checkCollision(this.x, this.y, false);
+            }
+        }
+
+        draw() {
+            ctx.beginPath();
+            ctx.moveTo(this.coordinates[this.coordinates.length - 1][0], this.coordinates[this.coordinates.length - 1][1]);
+            ctx.lineTo(this.x, this.y);
+            ctx.strokeStyle = 'hsl(' + hue + ', 100%, ' + this.brightness + '%)';
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(this.tx, this.ty, this.targetRadius, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+    }
+
+    class Particle {
+        constructor(x, y) {
+            this.x = x;
+            this.y = y;
+            this.coordinates = [];
+            this.coordinateCount = 5;
+            while (this.coordinateCount--) {
+                this.coordinates.push([this.x, this.y]);
+            }
+            this.angle = random(0, Math.PI * 2);
+            this.speed = random(12, 15);
+            this.speed *= Math.sin(Math.random() * Math.PI - Math.PI / 2);
+            this.friction = 0.95;
+            this.gravity = 1.5;
+            this.hue = random(hue - 20, hue + 20);
+            this.brightness = random(50, 80);
+            this.alpha = 1;
+            this.decay = random(0.010, 0.02);
+        }
+
+        update(index) {
+            this.coordinates.pop();
+            this.coordinates.unshift([this.x, this.y]);
+            this.speed *= this.friction;
+            this.x += Math.cos(this.angle) * this.speed;
+            this.y += Math.sin(this.angle) * this.speed + this.gravity;
+            this.alpha -= this.decay;
+
+            if (this.alpha <= this.decay) {
+                particles.splice(index, 1);
+            }
+        }
+
+        draw() {
+            ctx.beginPath();
+            ctx.lineWidth = 3;
+            ctx.moveTo(this.coordinates[this.coordinates.length - 1][0], this.coordinates[this.coordinates.length - 1][1]);
+            ctx.lineTo(this.x, this.y);
+            ctx.strokeStyle = 'hsla(' + this.hue + ', 100%, ' + this.brightness + '%, ' + this.alpha + ')';
+            ctx.stroke();
+        }
+    }
+
+    function createParticles(x, y) {
+        var particleCount = 100;
+        while (particleCount--) {
+            particles.push(new Particle(x, y));
+        }
+    }
+
+    // Monster Code
+    const monsters = [];
+    let score = 0;
+    let spawnFrequency = 2000;
+    let gamePaused = false;
+    let spawnInterval;
+
+    function updateScoreboard() {
+        document.getElementById('scoreboard').textContent = `Score: ${score}`;
+    }
+
+    function createMonster() {
+        const monsterContainer = document.createElement('div'); // Container for the monster and HP
+        monsterContainer.classList.add('monster');
+        const size = parseInt(document.getElementById('size').value);
+        monsterContainer.style.width = size + 'px';
+        monsterContainer.style.height = 'auto'; // Height will be determined by the image
+        monsterContainer.style.position = 'absolute';
+        monsterContainer.style.left = Math.random() * (window.innerWidth - size) + 'px';
+        monsterContainer.style.top = '0px';
+
+
+        const hpProbability = Math.random();
+        if (hpProbability < 0.2) {
+            monsterContainer.hp = 30;
+        } else if (hpProbability < 0.21) {
+            monsterContainer.hp = 100;
+        } else {
+            monsterContainer.hp = 20;
+        }
+
+        // Create the monster image
+        const monsterImage = document.createElement('img');
+        monsterImage.src = 'monster.png';
+        monsterImage.style.width = '100%'; // Fill the container
+        monsterImage.style.height = 'auto'; // Maintain aspect ratio
+
+        // Create the HP display
+        const hpDisplay = document.createElement('div');
+        hpDisplay.classList.add('monster-hp');
+        hpDisplay.textContent = monsterContainer.hp;
+
+        // Position HP display at the bottom-right of the monster container
+        hpDisplay.style.position = 'absolute';
+        hpDisplay.style.bottom = '0';
+        hpDisplay.style.right = '0';
+        hpDisplay.style.backgroundColor = 'rgba(0, 0, 0, 0.6)'; // Improve visibility
+        hpDisplay.style.color = 'white';
+        hpDisplay.style.fontSize = '10px';
+        hpDisplay.style.padding = '2px';
+
+        // Append the image and HP display to the monster container
+        monsterContainer.appendChild(monsterImage);
+        monsterContainer.appendChild(hpDisplay);
+
+        // Add the monster container to the document
+        document.body.appendChild(monsterContainer);
+        monsters.push(monsterContainer);
+    }
+
+
+
+
+
+    function updateMonsters() {
+        monsters.forEach((monster, index) => {
+            const top = parseFloat(monster.style.top);
+            monster.style.top = top + 2 + 'px';
+
+            if (monster.hp <= 0) {
+                score++;
+                updateScoreboard();
+
+                if (score % 10 === 0) {
+                    spawnFrequency *= 0.97;
+                    clearInterval(spawnInterval);
+                    spawnInterval = setInterval(createMonster, spawnFrequency);
+                }
+                monster.remove();
+                monsters.splice(index, 1);
+            } else if (top >= window.innerHeight - 50) {
+                gameOver(); // Call gameOver when a monster reaches the bottom
+            }
+
+            const hpDisplay = monster.querySelector('.monster-hp');
+            hpDisplay.textContent = monster.hp;
+        });
+    }
+
+    function checkCollision(fx, fy, isEndpoint) {
+        monsters.forEach((monster) => {
+            const size = parseInt(document.getElementById('size').value);
+            const mx = parseFloat(monster.style.left) + size / 2;
+            const my = parseFloat(monster.style.top) + size / 2;
+            const distance = calculateDistance(fx, fy, mx, my);
+
+            if (distance < size) {
+                if (isEndpoint || !isEndpoint) {
+                    monster.hp--;
+                }
+            }
+        });
+    }
+
+    function togglePause() {
+        gamePaused = !gamePaused;
+        const overlay = document.getElementById('pause-overlay');
+
+        if (gamePaused) {
+            overlay.style.display = 'block';
+            clearInterval(spawnInterval);
+        } else {
+            overlay.style.display = 'none';
+            spawnInterval = setInterval(createMonster, spawnFrequency);
+        }
+    }
+
+    function gameLoop() {
+        if (!gamePaused) {
+            updateMonsters();
+        }
+        requestAnimFrame(gameLoop);
+    }
+
+    // Fireworks Loop
+    function loop() {
+        requestAnimFrame(loop);
+
+        hue += 0.5;
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillRect(0, 0, cw, ch);
+        ctx.globalCompositeOperation = 'lighter';
+
+        for (var i = fireworks.length - 1; i >= 0; i--) {
+            fireworks[i].draw();
+            fireworks[i].update(i);
+        }
+
+        for (var i = particles.length - 1; i >= 0; i--) {
+            particles[i].draw();
+            particles[i].update(i);
+        }
+
+        if (timerTick >= timerTotal) {
+            if (!mousedown) {
+                fireworks.push(new Firework(random(cw / 5, cw / 5 * 4), ch, random(0, cw), random(0, ch / 2)));
+                timerTick = 0;
+            }
+        } else {
+            timerTick++;
+        }
+
+        if (limiterTick >= limiterTotal) {
+            if (mousedown) {
+                fireworks.push(new Firework(cw / 2, ch, mx, my));
+                limiterTick = 0;
+            }
+        } else {
+            limiterTick++;
+        }
+    }
+    function gameOver() {
+        // Stop spawning monsters
+        clearInterval(spawnInterval);
+
+        // Create a game-over overlay
+        const gameOverOverlay = document.createElement('div');
+        gameOverOverlay.id = 'game-over-overlay';
+        gameOverOverlay.style.position = 'fixed';
+        gameOverOverlay.style.top = '0';
+        gameOverOverlay.style.left = '0';
+        gameOverOverlay.style.width = '100%';
+        gameOverOverlay.style.height = '100%';
+        gameOverOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+        gameOverOverlay.style.color = 'white';
+        gameOverOverlay.style.fontFamily = 'Arial, sans-serif';
+        gameOverOverlay.style.fontSize = '24px';
+        gameOverOverlay.style.textAlign = 'center';
+        gameOverOverlay.style.lineHeight = 'normal';
+        gameOverOverlay.style.display = 'flex';
+        gameOverOverlay.style.flexDirection = 'column';
+        gameOverOverlay.style.justifyContent = 'center';
+        gameOverOverlay.style.alignItems = 'center';
+        gameOverOverlay.style.zIndex = '2000';
+
+        // Add the game over display
+        const gameOverText = document.createElement('div');
+        gameOverText.textContent = 'GAME OVER';
+        gameOverText.style.fontSize = '32px';
+        gameOverText.style.fontWeight = 'bold';
+        gameOverText.style.marginBottom = '20px';
+        gameOverOverlay.appendChild(gameOverText);
+
+        // Add the score display
+        const scoreDisplay = document.createElement('div');
+        scoreDisplay.textContent = `Your score: ${score}`;
+        scoreDisplay.style.marginBottom = '20px';
+        gameOverOverlay.appendChild(scoreDisplay);
+
+
+
+        // Append overlay to the body
+        document.body.appendChild(gameOverOverlay);
+    }
+    function addName() {
+        const creatorLabel = document.createElement('div');
+        creatorLabel.id = 'creator-label';
+        creatorLabel.textContent = 'Made by Solstice';
+        creatorLabel.style.position = 'fixed';
+        creatorLabel.style.top = '10px';
+        creatorLabel.style.left = '10px';
+        creatorLabel.style.color = 'white';
+        creatorLabel.style.fontSize = '14px';
+        creatorLabel.style.fontFamily = '"Times New Roman", Times, serif';
+        creatorLabel.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
+        creatorLabel.style.padding = '5px 10px';
+        creatorLabel.style.borderRadius = '5px';
+        creatorLabel.style.zIndex = '1000'; // Ensure it stays above other elements
+        document.body.appendChild(creatorLabel);
+    }
+    function pauseInstruction() {
+        const pauseLabel = document.createElement('div');
+        pauseLabel.id = 'pause-instruction';
+        pauseLabel.textContent = 'Press [Space] to pause | Sealed with Sol’ spark.';
+        pauseLabel.style.position = 'fixed';
+        pauseLabel.style.top = '40px';  // Adjust the position below the creator label
+        pauseLabel.style.left = '10px';
+        pauseLabel.style.color = 'white';
+        pauseLabel.style.fontSize = '14px';
+        pauseLabel.style.fontFamily = '"Times New Roman", Times, serif';
+        pauseLabel.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
+        pauseLabel.style.padding = '5px 10px';
+        pauseLabel.style.borderRadius = '5px';
+        pauseLabel.style.zIndex = '1000'; // Ensure it stays above other elements
+        document.body.appendChild(pauseLabel);
+    }
+
+    document.getElementById('apply').addEventListener('click', () => {
+        clearInterval(spawnInterval);
+        const frequency = parseInt(document.getElementById('freq').value);
+        spawnFrequency = frequency;
+        spawnInterval = setInterval(createMonster, spawnFrequency);
+    });
+
+    window.onload = () => {
+        addName();
+        pauseInstruction();
+        spawnInterval = setInterval(createMonster, spawnFrequency);
+        loop();
+        gameLoop();
+    };
+
+    document.addEventListener('keydown', function (e) {
+        if (e.code === 'Space') {
+            e.preventDefault();
+            togglePause();
+        }
+    });
+
+    canvas.addEventListener('mousemove', function (e) {
+        mx = e.pageX - canvas.offsetLeft;
+        my = e.pageY - canvas.offsetTop;
+    });
+
+    canvas.addEventListener('mousedown', function (e) {
+        e.preventDefault();
+        mousedown = true;
+    });
+
+    canvas.addEventListener('mouseup', function (e) {
+        e.preventDefault();
+        mousedown = false;
+    });
+</script>
+
 </html>
