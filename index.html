@@ -495,44 +495,44 @@
         }
     });
 
-    function handleInputStart(e) {
-    e.preventDefault();
-    mousedown = true;
+    canvas.addEventListener('mousemove', function (e) {
+        mx = e.pageX - canvas.offsetLeft;
+        my = e.pageY - canvas.offsetTop;
+    });
 
-    // For touch events, use the first touch point
-    if (e.touches && e.touches.length > 0) {
-        mx = e.touches[0].clientX - canvas.offsetLeft;
-        my = e.touches[0].clientY - canvas.offsetTop;
-    } else {
-        mx = e.clientX - canvas.offsetLeft;
-        my = e.clientY - canvas.offsetTop;
+    canvas.addEventListener('mousedown', function (e) {
+        e.preventDefault();
+        mousedown = true;
+    });
+
+    canvas.addEventListener('mouseup', function (e) {
+        e.preventDefault();
+        mousedown = false;
+    });
+    // Function to handle both click and touchstart events
+function handleInput(event) {
+    event.preventDefault();
+
+    // Get input coordinates based on the event type
+    let inputX, inputY;
+    if (event.type === 'click') {
+        inputX = event.clientX - canvas.offsetLeft;
+        inputY = event.clientY - canvas.offsetTop;
+    } else if (event.type === 'touchstart') {
+        inputX = event.touches[0].clientX - canvas.offsetLeft;
+        inputY = event.touches[0].clientY - canvas.offsetTop;
     }
+
+    // Use inputX and inputY to trigger necessary actions
+    console.log(`Interaction at: (${inputX}, ${inputY})`);
+    // Example action: Create a firework or interact with the game
+    fireworks.push(new Firework(cw / 2, ch, inputX, inputY));
 }
 
-function handleInputMove(e) {
-    // For touch events, use the first touch point
-    if (e.touches && e.touches.length > 0) {
-        mx = e.touches[0].clientX - canvas.offsetLeft;
-        my = e.touches[0].clientY - canvas.offsetTop;
-    } else {
-        mx = e.clientX - canvas.offsetLeft;
-        my = e.clientY - canvas.offsetTop;
-    }
-}
+// Attach event listeners for both `click` and `touchstart`
+canvas.addEventListener('click', handleInput);
+canvas.addEventListener('touchstart', handleInput);
 
-function handleInputEnd(e) {
-    e.preventDefault();
-    mousedown = false;
-}
-
-canvas.addEventListener('mousedown', handleInputStart);
-canvas.addEventListener('mousemove', handleInputMove);
-canvas.addEventListener('mouseup', handleInputEnd);
-
-// Add equivalent touch event listeners for touchscreens
-canvas.addEventListener('touchstart', handleInputStart);
-canvas.addEventListener('touchmove', handleInputMove);
-canvas.addEventListener('touchend', handleInputEnd);
 </script>
 
 </html>
