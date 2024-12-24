@@ -3,26 +3,9 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Fireworks with Monsters</title>
 </head>
 <style>
-    @media (max-width: 768px) {
-    #scoreboard {
-        font-size: 14px;
-    }
-
-    #console input, #console button {
-        font-size: 16px;
-    }
-
-    .monster {
-        width: 40px;
-        height: 40px;
-    }
-}
-
     html,
     body {
         height: 100%;
@@ -512,36 +495,44 @@
         }
     });
 
-    canvas.addEventListener('mousemove', function (e) {
-        mx = e.pageX - canvas.offsetLeft;
-        my = e.pageY - canvas.offsetTop;
-    });
+    function handleInputStart(e) {
+    e.preventDefault();
+    mousedown = true;
 
-    canvas.addEventListener('mousedown', function (e) {
-        e.preventDefault();
-        mousedown = true;
-    });
-
-    canvas.addEventListener('mouseup', function (e) {
-        e.preventDefault();
-        mousedown = false;
-    });
-    // Handle mouse click
-document.addEventListener('click', function(event) {
-    handleUserClick(event);
-});
-
-// Handle touch events
-document.addEventListener('touchstart', function(event) {
-    handleUserClick(event);
-});
-
-// Common function to handle the click
-function handleUserClick(event) {
-    // Your existing code to handle the click or touch action
-    console.log("Screen clicked or touched at: " + event.clientX + ", " + event.clientY);
+    // For touch events, use the first touch point
+    if (e.touches && e.touches.length > 0) {
+        mx = e.touches[0].clientX - canvas.offsetLeft;
+        my = e.touches[0].clientY - canvas.offsetTop;
+    } else {
+        mx = e.clientX - canvas.offsetLeft;
+        my = e.clientY - canvas.offsetTop;
+    }
 }
 
+function handleInputMove(e) {
+    // For touch events, use the first touch point
+    if (e.touches && e.touches.length > 0) {
+        mx = e.touches[0].clientX - canvas.offsetLeft;
+        my = e.touches[0].clientY - canvas.offsetTop;
+    } else {
+        mx = e.clientX - canvas.offsetLeft;
+        my = e.clientY - canvas.offsetTop;
+    }
+}
+
+function handleInputEnd(e) {
+    e.preventDefault();
+    mousedown = false;
+}
+
+canvas.addEventListener('mousedown', handleInputStart);
+canvas.addEventListener('mousemove', handleInputMove);
+canvas.addEventListener('mouseup', handleInputEnd);
+
+// Add equivalent touch event listeners for touchscreens
+canvas.addEventListener('touchstart', handleInputStart);
+canvas.addEventListener('touchmove', handleInputMove);
+canvas.addEventListener('touchend', handleInputEnd);
 </script>
 
 </html>
